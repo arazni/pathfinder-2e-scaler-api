@@ -2,30 +2,34 @@
 
 open Scaler.Gamemastery
 
-type NearDamage = {
-  count: int
-  size: int
-  bonus: decimal
-}
-
 let add x y = x + y
 let times x y = x * y
 
 type AbsoluteCompare<'a> = int -> 'a -> ('a -> int) -> int
 type IntervalCompare<'a> = int -> 'a -> ('a -> int) -> ('a -> int) -> double
-type AbsoluteLevelValue = (int -> int)
-type IntervalLevelValue = (int -> int) * (int -> int)
+type RatioCompare<'a> = int -> 'a -> ('a -> int) -> double
 
 type ComparerOption<'a> =
   | Absolute of AbsoluteCompare<'a>
   | Interval of IntervalCompare<'a>
+  | Ratio of RatioCompare<'a>
 
 type LevelValueOption =
   | Absolute of (int -> int)
   | Interval of (int -> int) * (int -> int)
+  | Ratio of (int -> int)
+
+type StrikeEstimateCategory =
+  | Low
+  | Moderate
+  | High
+  | Extreme
 
 let absoluteAttributeCompare attribute originalLevel estimator =
   abs ((estimator originalLevel) - attribute)
+
+let ratioCompare attribute originalLevel estimator =
+  (double attribute) / double (estimator originalLevel)
 
 let absoluteAttributeSort attribute originalLevel estimators =
   Seq.sortBy (fun estimator -> absoluteAttributeCompare attribute originalLevel estimator) estimators
@@ -38,40 +42,54 @@ let estimateAbsoluteAttributeFromClosestFunction attribute originalLevel newLeve
   attribute - closestFunction originalLevel + closestFunction newLevel
 
 let estimateIntervalAttributeFromClosestFunction attribute originalLevel newLevel (fLow: int -> int) (fHigh: int -> int) =
-  let ratio = intervalRatio attribute originalLevel fLow fHigh
-  (ratio * double (fHigh newLevel - fLow newLevel)) 
+  intervalRatio attribute originalLevel fLow fHigh
+  |> times (double (fHigh newLevel - fLow newLevel))
   |> round
   |> int
   |> add (fLow newLevel)
 
+let estimateRatioAttributeFromClosestFunction attribute originalLevel newLevel closestFunction =
+  closestFunction newLevel
+  |> double
+  |> times (ratioCompare attribute originalLevel closestFunction)
+  |> int
+
 let estimateAbsoluteAttribute attribute originalLevel newLevel functions =
-  absoluteAttributeSort attribute originalLevel functions |> Seq.head
+  absoluteAttributeSort attribute originalLevel functions 
+  |> Seq.head
   |> estimateAbsoluteAttributeFromClosestFunction attribute originalLevel newLevel
 
 let intervalCompare value originalLevel estimatorLow estimatorHigh =
-  //if value <= estimatorLow originalLevel then double (absoluteAttributeCompare value originalLevel estimatorLow)
-  //else if value >= estimatorHigh originalLevel then double (absoluteAttributeCompare value originalLevel estimatorHigh)
-  //else intervalRatio value originalLevel estimatorLow estimatorHigh
   if value <= estimatorLow originalLevel || value >= estimatorHigh originalLevel then None
   else intervalRatio value originalLevel estimatorLow estimatorHigh |> Some
 
-let intervalSortValue attribute originalLevel levelValueOption =
+let mixedSortValue attribute originalLevel levelValueOption =
   match levelValueOption with
   | Interval (fLow, fHigh) -> intervalCompare attribute originalLevel fLow fHigh
   | Absolute f -> 
     absoluteAttributeCompare attribute originalLevel f
     |> double
     |> Some
+  | Ratio f ->
+    ratioCompare attribute originalLevel f
+    |> Some
+
+let headBy func sequence =
+  Seq.filter (fun x -> func x |> Option.isSome) sequence
+  |> Seq.sortBy (fun x -> (func x).Value)
+  |> Seq.head
 
 let closestMixedAttributeComparer attribute originalLevel comparers =
-  Seq.filter (fun comparer -> (intervalSortValue attribute originalLevel comparer) |> Option.isSome) comparers
-  |> Seq.sortBy (fun comparer -> double (intervalSortValue attribute originalLevel comparer).Value)
-  |> Seq.head
+  //Seq.filter (fun comparer -> (mixedSortValue attribute originalLevel comparer) |> Option.isSome) comparers
+  //|> Seq.sortBy (fun comparer -> (mixedSortValue attribute originalLevel comparer).Value)
+  //|> Seq.head
+  headBy (mixedSortValue attribute originalLevel) comparers
 
 let estimateLevelValueOption attribute originalLevel newLevel levelValueOption =
   match levelValueOption with
   | Interval (low, high) -> estimateIntervalAttributeFromClosestFunction attribute originalLevel newLevel low high
-  | Absolute estimator -> estimateAbsoluteAttributeFromClosestFunction (int attribute) originalLevel newLevel estimator
+  | Absolute estimator -> estimateAbsoluteAttributeFromClosestFunction attribute originalLevel newLevel estimator
+  | Ratio estimator -> estimateRatioAttributeFromClosestFunction attribute originalLevel newLevel estimator
 
 let estimateLevelValueOptionAttribute attribute originalLevel newLevel levelValueOptions =
   levelValueOptions
@@ -108,30 +126,30 @@ let estimateSpellDifficultyClass modifier originalLevel newLevel =
 
 let private defaultDiceSize = 6
 let possibleDiceSizes = Seq.init 5 (fun n -> 2 * (n+2))
-let diceSizeToAverage size = decimal (size+1) / 2m
+let diceSizeToAverage size = double (size+1) / 2.0
 let possibleDiceAverages = Seq.map diceSizeToAverage possibleDiceSizes
 let toDecimal seq = Seq.map (fun x -> decimal x) seq
 
-let averageToMatchingDamageDiceSize (average: decimal) (size: int) =
+let averageToMatchingDamageDiceSize average (size: int) =
   { 
-    bonus = average % (diceSizeToAverage size);
+    bonus = average % (diceSizeToAverage size) |> int |> Some;
     count = int (average / (diceSizeToAverage size));
     size = size
   }
 
-let private _averageToPossibleDamageDice (average: decimal) sizes =
+let private _averageToPossibleDamageDice average sizes =
   Seq.map (fun size -> averageToMatchingDamageDiceSize average size) sizes
   |> Seq.where (fun possible -> possible.count > 0)
 
-let averageToPossibleDamageDice (average: decimal) sizes =
+let averageToPossibleDamageDice average sizes =
   match average with
-  | average when average < 3m -> seq { averageToMatchingDamageDiceSize average defaultDiceSize }
+  | average when average < 3.0 -> seq { averageToMatchingDamageDiceSize average defaultDiceSize }
   | _ -> _averageToPossibleDamageDice average sizes
 
-let averageToNearestDamageDice (average: decimal) sizes =
+let averageToNearestDamageDice average sizes =
   averageToPossibleDamageDice average sizes
   |> Seq.sortBy (fun nearby -> nearby.bonus)
-  |> Seq.take 1
+  |> Seq.head
 
 let estimateSkill modifier originalLevel newLevel =
   seq {
@@ -158,11 +176,57 @@ let estimateHitPoint hitPoint originalLevel newLevel =
   |> round
   |> int
 
-let estimateStrikeDamage averageDamage dieSize originalLevel newLevel =
-  let sizes = seq {}
-  {
-    count = strikeDamageDiceCount newLevel,
-    size = 
-  }
+let estimateDieSizeFromCategory estimateCategory dieSize originalLevel newLevel =
+  match estimateCategory with
+  | StrikeEstimateCategory.Low -> estimateAbsoluteAttributeFromClosestFunction dieSize originalLevel newLevel lowStrikeDamageDiceSize
+  | StrikeEstimateCategory.Moderate -> estimateAbsoluteAttributeFromClosestFunction dieSize originalLevel newLevel moderateStrikeDamageDiceSize
+  | StrikeEstimateCategory.High -> estimateAbsoluteAttributeFromClosestFunction dieSize originalLevel newLevel highStrikeDamageDiceSize
+  | StrikeEstimateCategory.Extreme -> estimateAbsoluteAttributeFromClosestFunction dieSize originalLevel newLevel extremeStrikeDamageDiceSize
+  |> min 12
+  |> max 4
 
-// strike damage, area damage
+// need to test the below
+
+let estimateAverageStrikeDamage averageDamage dieSize originalLevel newLevel =
+  let (averageLvo, category) = 
+    seq {
+      LevelValueOption.Ratio (lowStrikeDamageAverage >> min 1), StrikeEstimateCategory.Low;
+      LevelValueOption.Interval (lowStrikeDamageAverage, moderateStrikeDamageAverage), StrikeEstimateCategory.Moderate;
+      LevelValueOption.Interval (moderateStrikeDamageAverage, highStrikeDamageAverage), StrikeEstimateCategory.High;
+      LevelValueOption.Interval (highStrikeDamageAverage, extremeStrikeDamageAverage), StrikeEstimateCategory.Extreme;
+      LevelValueOption.Ratio (extremeStrikeDamageAverage >> max 1), StrikeEstimateCategory.Extreme;
+    }
+    |> headBy (fun (lvo, _) -> mixedSortValue averageDamage originalLevel lvo)
+
+  let scaledAverage = estimateLevelValueOption averageDamage originalLevel newLevel averageLvo
+  let size = estimateDieSizeFromCategory category dieSize originalLevel newLevel
+  let count = strikeDamageDiceCount newLevel
+  let bonus = scaledAverage - averageDiceDamage count size
+
+  { count = count; size = size; bonus = Some bonus}
+  
+let estimateUnlimitedUseAreaDamage averageDamage originalLevel newLevel =
+  seq {
+    LevelValueOption.Ratio (unlimitedUseAreaDamageAverage >> min 1);
+    LevelValueOption.Ratio (unlimitedUseAreaDamageAverage >> max 1);
+  }
+  |> estimateLevelValueOptionAttribute averageDamage originalLevel newLevel
+  |> double
+  |> averageToNearestDamageDice
+
+let estimateLimitedUseAreaDamage averageDamage originalLevel newLevel =
+  seq {
+    LevelValueOption.Ratio (limitedUseAreaDamageAverage >> min 1);
+    LevelValueOption.Ratio (limitedUseAreaDamageAverage >> max 1);
+  }
+  |> estimateLevelValueOptionAttribute averageDamage originalLevel newLevel
+  |> double
+  |> averageToNearestDamageDice
+
+let estimateRegeneration regeneration originalLevel newLevel =
+  seq {
+    LevelValueOption.Ratio (moderateRegeneration >> min 1);
+    LevelValueOption.Interval (moderateRegeneration, highRegeneration);
+    LevelValueOption.Ratio (highRegeneration >> max 1);
+  }
+  |> estimateLevelValueOptionAttribute regeneration originalLevel newLevel

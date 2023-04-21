@@ -246,7 +246,9 @@ let extremeSpellHit level =
   extremeSpellDifficultyClass level - 8
 
 let expectedHighestSpellLevel level =
-  min (max ((level+1)/2) 0) 10
+  (level+1)/2
+  |> max 0
+  |> min 10
 
 let limitedUseAreaDamageAverage level =
   match level with
@@ -258,6 +260,13 @@ let unlimitedUseAreaDamageAverage level =
   | level when level < 15 -> 3 + level + every2 (level+2) + oneStartingAt 3 level
   | _ -> 12 + level + every2 (level-17)
 
+let moderateRegeneration level =
+  highStrikeDamageAverage level
+
+let highRegeneration level =
+  1.5 * double (highStrikeDamageAverage level)
+  |> int
+
 let levels = [ -1 .. 24 ]
 
 let test x =
@@ -268,9 +277,8 @@ let test2 x =
   List.map (fun l -> averageDiceDamage (strikeDamageDiceCount l) (moderateStrikeDamageDiceSize l))
 
 
-// fast heal or regeneration: moderate = high strike damage, high = moderate * 1.5
 // at-will heals: spell level 2 lower than highest spells
-// resistance: no guidance on fewer hp
-// weakness: bonus hp = quadruple weakness or hp = weakness if hard to exploit
+// resistance hp adjustment: no guidance on fewer hp, skip
+// weakness hp adjustment: bonus hp = quadruple weakness or hp = weakness if hard to exploit, skip
 // special single-target damage can use extreme strike damage
 // single action or condition effects should be -2 level
