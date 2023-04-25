@@ -57,9 +57,6 @@ let main args =
   |> routes.Apply
   |> ignore
 
-  app.Services.GetRequiredService<CreatureContext>().Database.EnsureCreated()
-  |> ignore
-
   app.Run()
 
   0
