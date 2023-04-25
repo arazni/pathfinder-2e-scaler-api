@@ -57,6 +57,6 @@ let main args =
   |> routes.Apply
   |> ignore
 
-  app.Run()
+  app.Run("http://0.0.0.0:8080")
 
   0
