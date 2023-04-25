@@ -1,9 +1,7 @@
 ﻿module Scaler.Estimations
 
+open Scaler.Models
 open Scaler.Gamemastery
-
-let add x y = x + y
-let times x y = x * y
 
 type AbsoluteCompare<'a> = int -> 'a -> ('a -> int) -> int
 type IntervalCompare<'a> = int -> 'a -> ('a -> int) -> ('a -> int) -> double
@@ -43,15 +41,15 @@ let estimateAbsoluteAttributeFromClosestFunction attribute originalLevel newLeve
 
 let estimateIntervalAttributeFromClosestFunction attribute originalLevel newLevel (fLow: int -> int) (fHigh: int -> int) =
   intervalRatio attribute originalLevel fLow fHigh
-  |> times (double (fHigh newLevel - fLow newLevel))
+  |> (*) (double (fHigh newLevel - fLow newLevel))
   |> round
   |> int
-  |> add (fLow newLevel)
+  |> (+) (fLow newLevel)
 
 let estimateRatioAttributeFromClosestFunction attribute originalLevel newLevel closestFunction =
   closestFunction newLevel
   |> double
-  |> times (ratioCompare attribute originalLevel closestFunction)
+  |> (*) (ratioCompare attribute originalLevel closestFunction)
   |> int
 
 let estimateAbsoluteAttribute attribute originalLevel newLevel functions =
@@ -230,3 +228,4 @@ let estimateRegeneration regeneration originalLevel newLevel =
     LevelValueOption.Ratio (highRegeneration >> max 1);
   }
   |> estimateLevelValueOptionAttribute regeneration originalLevel newLevel
+

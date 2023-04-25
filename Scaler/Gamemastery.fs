@@ -1,16 +1,5 @@
 ﻿module Scaler.Gamemastery
 
-type DamageDice = {
-  count: int
-  size: int
-}
-
-type Damage = {
-  count: int
-  size: int
-  bonus: option<int>
-}
-
 let everyRationalInterval multiplier interval x =
   max (x*multiplier/interval) 0
 
@@ -208,6 +197,10 @@ let extremeStrikeDamageAverage level =
 let averageDiceDamage number size =
   int (decimal number * decimal (size+1) / 2m)
 
+let averageDamage number size bonus =
+  averageDiceDamage number size
+  |> (+) (Option.defaultValue 0 bonus)
+
 let lowStrikeDamageBonus level =
   lowStrikeDamageAverage level 
   - averageDiceDamage (strikeDamageDiceCount level) (lowStrikeDamageDiceSize level)
@@ -266,16 +259,6 @@ let moderateRegeneration level =
 let highRegeneration level =
   1.5 * double (highStrikeDamageAverage level)
   |> int
-
-let levels = [ -1 .. 24 ]
-
-let test x =
-  Seq.iter (printf "%d\n") x
-
-let test2 x =
-  x |>
-  List.map (fun l -> averageDiceDamage (strikeDamageDiceCount l) (moderateStrikeDamageDiceSize l))
-
 
 // at-will heals: spell level 2 lower than highest spells
 // resistance hp adjustment: no guidance on fewer hp, skip
