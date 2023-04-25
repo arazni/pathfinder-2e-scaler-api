@@ -1,8 +1,10 @@
 module Api.Program
 
 open Microsoft.AspNetCore.Builder
-open Microsoft.Extensions.Hosting
+open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Http.HttpResults
+open Microsoft.Extensions.DependencyInjection
+open Microsoft.Extensions.Hosting
 open Persistence.Context
 open Persistence.Query
 open FSharp.MinimalApi
@@ -14,7 +16,7 @@ open Scaler.Models
 let routes =
   endpoints {
     get "/" (fun (db: CreatureContext) -> 
-      async {
+      task {
         let! creatures = getCreatures db
         return Ok(creatures)
       })
@@ -42,6 +44,10 @@ let routes =
 let main args =
   let builder = WebApplication.CreateBuilder(args)
 
+  builder.Services
+    .AddDbContext<CreatureContext>(ServiceLifetime.Transient, ServiceLifetime.Transient)
+    |> ignore
+
   let app = builder.Build()
 
   app.UseHttpsRedirection()
@@ -49,6 +55,9 @@ let main args =
 
   app.MapGroup("api").WithTags("Root")
   |> routes.Apply
+  |> ignore
+
+  app.Services.GetRequiredService<CreatureContext>().Database.EnsureCreated()
   |> ignore
 
   app.Run()

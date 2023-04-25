@@ -4,6 +4,12 @@ open FSharp.Json
 open Scaler.Models
 
 [<CLIMutable>]
+type DatabasePartialCreature = {
+  level: int
+  name: string
+}
+
+[<CLIMutable>]
 type DatabaseCreature = {
   level: int
   name: string

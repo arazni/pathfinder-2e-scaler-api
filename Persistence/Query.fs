@@ -11,8 +11,7 @@ let getCreature (db: CreatureContext) name =
   }
 
 let getCreatures (db: CreatureContext) =
-  query {
-    for c in db.Creatures do
-      select (c.name, c.level)
+  async {
+    let! creatures = db.Creatures |> toListAsync
+    return List.map (fun c -> { name = c.name; level = c.level }) creatures
   }
-  |> toListAsync
