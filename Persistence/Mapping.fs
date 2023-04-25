@@ -20,4 +20,4 @@ let toDatabaseCreature (creature : Creature) =
   }
 
 let toCreature (creature: DatabaseCreature) =
-  Json.deserializeEx jsonConfig creature.self
+  Json.deserializeEx<Creature> jsonConfig creature.self

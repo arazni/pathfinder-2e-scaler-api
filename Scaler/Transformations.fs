@@ -53,15 +53,15 @@ let newDefenses oldLevel newLevel (defenses: CreatureDefenses) =
       |> Option.map (fun weaknesses -> Array.map (fun (weakness: CreatureWeakness) -> { name = weakness.name; amount = estimateResistanceOrWeakness weakness.amount oldLevel newLevel }) weaknesses)
   }
 
-let scaledCreature (baseCreature: Creature) oldLevel newLevel =
+let scaledCreature (baseCreature: Creature) newLevel =
   {
     name = baseCreature.name;
     level = newLevel;
-    skills = newLevelSkills oldLevel newLevel baseCreature.skills;
-    perception = newPerception oldLevel newLevel baseCreature.perception;
-    abilityModifiers = newAbilityModifiers oldLevel newLevel baseCreature.abilityModifiers;
-    attacks = newAttacks oldLevel newLevel baseCreature.attacks;
-    spellcasting = newSpellcasting oldLevel newLevel baseCreature.spellcasting;
-    defenses = newDefenses oldLevel newLevel baseCreature.defenses;
+    skills = newLevelSkills baseCreature.level newLevel baseCreature.skills;
+    perception = newPerception baseCreature.level newLevel baseCreature.perception;
+    abilityModifiers = newAbilityModifiers baseCreature.level newLevel baseCreature.abilityModifiers;
+    attacks = newAttacks baseCreature.level newLevel baseCreature.attacks;
+    spellcasting = newSpellcasting baseCreature.level newLevel baseCreature.spellcasting;
+    defenses = newDefenses baseCreature.level newLevel baseCreature.defenses;
   }
 

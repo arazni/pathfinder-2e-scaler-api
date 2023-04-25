@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Persistence", "Persistence\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FileLoader", "FileLoader\FileLoader.fsproj", "{10D79678-04CB-49E7-85BC-CE019B43769C}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Api", "Api\Api.fsproj", "{6C083FBE-E2BC-4D28-951D-B15893132776}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{10D79678-04CB-49E7-85BC-CE019B43769C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{10D79678-04CB-49E7-85BC-CE019B43769C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{10D79678-04CB-49E7-85BC-CE019B43769C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C083FBE-E2BC-4D28-951D-B15893132776}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C083FBE-E2BC-4D28-951D-B15893132776}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C083FBE-E2BC-4D28-951D-B15893132776}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C083FBE-E2BC-4D28-951D-B15893132776}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,3 +12,5 @@ upload db bestiaries
 // verify
 db.Creatures.Find("Petitioner")
 |> fun c -> printfn "%s" c.name
+
+// manually copy and move sqlite file to Api
