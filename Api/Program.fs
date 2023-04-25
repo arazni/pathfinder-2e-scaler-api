@@ -53,7 +53,7 @@ let main args =
   app.UseHttpsRedirection()
   |> ignore
 
-  app.MapGroup("api").WithTags("Root")
+  app.MapGroup("").WithTags("Root")
   |> routes.Apply
   |> ignore
 
