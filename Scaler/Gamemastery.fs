@@ -30,6 +30,10 @@ let oneStartingAtEach list x =
 let multiplierStartingAt at x =
   if at <= x then 1 + x - at else 0
 
+// aim to keep the significantly below 0 ones still low
+let terribleAbilityModifier level =
+  -3
+
 let lowAbilityModifier level =
   level/4 + oneStartingAt 1 level
 

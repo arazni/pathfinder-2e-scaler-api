@@ -99,7 +99,18 @@ let estimatePerception (perception: int) (originalLevel: int) (newLevel: int) =
   |> estimateAbsoluteAttribute perception originalLevel newLevel
 
 let estimateAbilityModifier modifier originalLevel newLevel =
-  if originalLevel < 1 then seq { lowAbilityModifier; moderateAbilityModifier; highAbilityModifier; } else seq { lowAbilityModifier; moderateAbilityModifier; highAbilityModifier; extremeAbilityModifier }
+  if originalLevel < 1 then seq { 
+    terribleAbilityModifier;
+    lowAbilityModifier;
+    moderateAbilityModifier;
+    highAbilityModifier;
+  } else seq {
+    terribleAbilityModifier;
+    lowAbilityModifier;
+    moderateAbilityModifier;
+    highAbilityModifier;
+    extremeAbilityModifier
+  }
   |> estimateAbsoluteAttribute modifier originalLevel newLevel
 
 let estimateArmorClass modifier originalLevel newLevel =
@@ -183,8 +194,6 @@ let estimateDieSizeFromCategory estimateCategory dieSize originalLevel newLevel 
   |> min 12
   |> max 4
 
-// need to test the below
-
 let estimateAverageStrikeDamage averageDamage dieSize originalLevel newLevel =
   let (averageLvo, category) = 
     seq {
@@ -203,6 +212,8 @@ let estimateAverageStrikeDamage averageDamage dieSize originalLevel newLevel =
 
   { count = count; size = size; bonus = Some bonus}
   
+// need to test the below more
+
 let estimateUnlimitedUseAreaDamage averageDamage originalLevel newLevel =
   seq {
     LevelValueOption.Ratio (unlimitedUseAreaDamageAverage >> min 1);
