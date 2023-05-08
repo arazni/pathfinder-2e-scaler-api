@@ -3,7 +3,6 @@
 open FSharp.Json
 open Scaler.Models
 
-[<CLIMutable>]
 type DatabasePartialCreature = {
   level: int
   name: string
@@ -27,3 +26,9 @@ let toDatabaseCreature (creature : Creature) =
 
 let toCreature (creature: DatabaseCreature) =
   Json.deserializeEx<Creature> jsonConfig creature.self
+
+let toPartialCreature (creature: DatabaseCreature) =
+  {
+    name = creature.name;
+    level = creature.level;
+  }

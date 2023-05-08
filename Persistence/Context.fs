@@ -9,6 +9,7 @@ type CreatureContext() =
 
   [<DefaultValue>]
   val mutable private creatures : DbSet<DatabaseCreature>
+
   member this.Creatures with get() = this.creatures and set v = this.creatures <- v
 
   override _.OnModelCreating builder =
