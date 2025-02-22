@@ -8,7 +8,6 @@ type DatabasePartialCreature = {
   name: string
 }
 
-[<CLIMutable>]
 type DatabaseCreature = {
   level: int
   name: string
