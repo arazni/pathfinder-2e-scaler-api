@@ -12,7 +12,7 @@
 
 	<ItemGroup>
 		<None Include="Dockerfile" />
-		<Content Include="creatures.sqlite">
+		<Content Include="..\creatures.sqlite">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>

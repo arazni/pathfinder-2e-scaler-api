@@ -25,7 +25,7 @@ let internal closeConnection (conn: SqliteConnection) =
   |> Async.RunSynchronously
 
 let getConnection() =
-  new SqliteConnection("Data Source=creatures.sqlite")
+  new SqliteConnection("Data Source=../creatures.sqlite")
 
 let createCreaturesTable (conn: SqliteConnection) =
   openConnection conn
@@ -54,40 +54,42 @@ let createCreaturesTable (conn: SqliteConnection) =
   closeConnection conn
 
 let getCreatures (conn: SqliteConnection) =
-  openConnection conn
+  async {
+    openConnection conn
 
-  let creaturesTable = table'<DatabasePartialCreature> "creatures"
+    let creaturesTable = table'<DatabasePartialCreature> "creatures"
 
-  let creatures = 
-    select {
-      for c in creaturesTable do
-      selectAll
-    } |> conn.SelectAsync<DatabasePartialCreature>
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
+    let! creatures = 
+      select {
+        for c in creaturesTable do
+        selectAll
+      } |> conn.SelectAsync<DatabasePartialCreature>
+      |> Async.AwaitTask
+
+    closeConnection conn
+
+    return creatures
     |> Seq.toList
-
-  closeConnection conn
-
-  creatures
+  }
 
 let getCreature (conn: SqliteConnection) name =
-  openConnection conn
-  let creaturesTable = table'<DatabaseCreature> "creatures"
+  async {
+    openConnection conn
+    let creaturesTable = table'<DatabaseCreature> "creatures"
 
-  let creature =
-    select {
-      for c in creaturesTable do
-      where (c.name = name)
-    } |> conn.SelectAsync<DatabaseCreature>
-    |> Async.AwaitTask
-    |> Async.RunSynchronously
+    let! creature =
+      select {
+        for c in creaturesTable do
+        where (c.name = name)
+      } |> conn.SelectAsync<DatabaseCreature>
+      |> Async.AwaitTask
+
+    closeConnection conn
+
+    return creature
     |> Seq.tryHead
     |> Option.map toCreature
-
-  closeConnection conn
-
-  creature
+  }
 
 let load (conn: SqliteConnection) creatures =
   openConnection conn

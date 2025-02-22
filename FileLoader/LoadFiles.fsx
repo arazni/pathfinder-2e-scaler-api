@@ -13,6 +13,8 @@
 
 open Persistence
 open FileLoader
+open Scaler.Models
+open System.IO
 
 Dapper.FSharp.SQLite.OptionTypes.register()
 
@@ -23,8 +25,14 @@ let bestiaries = [| "Data\\bestiary-1.json"; "Data\\bestiary-2.json"; "Data\\bes
 
 Loader.upload conn bestiaries
 
-Database.getCreature conn "Petitioner"
-
 Database.getCreatures conn
+|> Async.RunSynchronously
+
+[| Database.getCreature conn "Petitioner" ; Database.getCreature conn "Ancient Blue Dragon" |]
+|> Async.Parallel
+|> Async.RunSynchronously
+|> Array.iter (printfn "%A")
 
 conn.Dispose()
+
+File.Move("creatures.sqlite", "../Api/creatures.sqlite")

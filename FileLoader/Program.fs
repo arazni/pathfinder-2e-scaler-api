@@ -1,5 +1,6 @@
 ﻿module FileLoader.Program
 
+open System.IO
 open FileLoader.Loader
 open Persistence
 
@@ -15,9 +16,11 @@ upload conn bestiaries
 
 // verify
 Database.getCreature conn "Petitioner"
+|> Async.RunSynchronously
 |> Option.iter (fun c -> printfn "%A" c)
 
 Database.getCreatures conn
+|> Async.RunSynchronously
 |> Seq.head
 |> printfn "%A"
 
