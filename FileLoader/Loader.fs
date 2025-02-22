@@ -4,10 +4,8 @@ open System.IO
 open FSharp.Json
 open FileLoader.Models
 open FileLoader.Conversions
-//open Persistence.Context
 open Persistence.Mapping
 open Persistence.Database
-//open EntityFrameworkCore.FSharp.DbContextHelpers
 
 type JsonFile = { creature: RawCreature[] }
 
@@ -18,24 +16,8 @@ let creaturesFromFile file =
   |> fun file -> file.creature
   |> Array.map rawCreatureToCreature
 
-//let load context creatures =
-//  creatures 
-//  |> addEntityRange context 
-//  |> ignore
-
-//  context
-//  |> saveChanges
-//  |> ignore
-
-//let upload context books = 
-//  books
-//  |> Array.map creaturesFromFile
-//  |> Array.map (Array.map toDatabaseCreature)
-//  |> Array.iter (load context)
-//  |> ignore
-
-let upload books =
+let upload conn books =
   books
   |> Array.map creaturesFromFile
   |> Array.map (Seq.map toDatabaseCreature >> Seq.toList)
-  |> Array.iter load
+  |> Array.iter (load conn)

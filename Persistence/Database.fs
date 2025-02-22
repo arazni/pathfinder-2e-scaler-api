@@ -14,23 +14,21 @@ let internal execute (command: SqliteCommand) =
   |> Async.AwaitTask
   |> Async.RunSynchronously
 
-let internal safeInit (conn: SqliteConnection) =
-  if isAlreadyInitialized |> not then
-    Dapper.FSharp.SQLite.OptionTypes.register()
-    isAlreadyInitialized <- true
-    
+let internal openConnection (conn: SqliteConnection) =
   conn.OpenAsync()
   |> Async.AwaitTask
   |> Async.RunSynchronously
-  
-  conn
 
-let getConnection =
+let internal closeConnection (conn: SqliteConnection) =
+  conn.CloseAsync()
+  |> Async.AwaitTask
+  |> Async.RunSynchronously
+
+let getConnection() =
   new SqliteConnection("Data Source=creatures.sqlite")
-  |> safeInit
 
-let createCreaturesTable =
-  use conn = getConnection
+let createCreaturesTable (conn: SqliteConnection) =
+  openConnection conn
   
   "drop table if exists [creatures]"
   |> command conn
@@ -53,12 +51,11 @@ let createCreaturesTable =
   |> execute
   |> ignore
 
-  conn.CloseAsync()
-  |> Async.AwaitTask
-  |> Async.RunSynchronously
+  closeConnection conn
 
-let getCreatures() =
-  use conn = getConnection
+let getCreatures (conn: SqliteConnection) =
+  openConnection conn
+
   let creaturesTable = table'<DatabasePartialCreature> "creatures"
 
   let creatures = 
@@ -70,14 +67,12 @@ let getCreatures() =
     |> Async.RunSynchronously
     |> Seq.toList
 
-  conn.CloseAsync()
-  |> Async.AwaitTask
-  |> Async.RunSynchronously
+  closeConnection conn
 
   creatures
 
-let getCreature name =
-  use conn = getConnection
+let getCreature (conn: SqliteConnection) name =
+  openConnection conn
   let creaturesTable = table'<DatabaseCreature> "creatures"
 
   let creature =
@@ -88,15 +83,14 @@ let getCreature name =
     |> Async.AwaitTask
     |> Async.RunSynchronously
     |> Seq.tryHead
+    |> Option.map toCreature
 
-  conn.CloseAsync()
-  |> Async.AwaitTask
-  |> Async.RunSynchronously
+  closeConnection conn
 
   creature
 
-let load creatures =
-  use conn = getConnection
+let load (conn: SqliteConnection) creatures =
+  openConnection conn
 
   let creaturesTable = table'<DatabaseCreature> "creatures"
 
@@ -108,7 +102,5 @@ let load creatures =
   |> Async.RunSynchronously
   |> ignore
 
-  conn.CloseAsync()
-  |> Async.AwaitTask
-  |> Async.RunSynchronously
-  |> ignore
+  closeConnection conn
+

@@ -3,18 +3,24 @@
 open FileLoader.Loader
 open Persistence
 
+Dapper.FSharp.SQLite.OptionTypes.register()
+
 let bestiaries = [| "Data\\bestiary-1.json"; "Data\\bestiary-2.json"; "Data\\bestiary-3.json" |]
 
-Database.createCreaturesTable
+let conn = Database.getConnection()
 
-upload bestiaries
+Database.createCreaturesTable conn
+
+upload conn bestiaries
 
 // verify
-Database.getCreature "Petitioner"
+Database.getCreature conn "Petitioner"
 |> Option.iter (fun c -> printfn "%A" c)
 
-Database.getCreatures()
+Database.getCreatures conn
 |> Seq.head
 |> printfn "%A"
+
+conn.Dispose()
 
 // manually copy and move sqlite file to Api

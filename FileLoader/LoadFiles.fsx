@@ -13,15 +13,18 @@
 
 open Persistence
 open FileLoader
-open Microsoft.Data.Sqlite
-open Persistence.Mapping
-open Dapper.FSharp.SQLite
 
-Database.createCreaturesTable
+Dapper.FSharp.SQLite.OptionTypes.register()
+
+let conn = Database.getConnection()
+
+Database.createCreaturesTable conn
 let bestiaries = [| "Data\\bestiary-1.json"; "Data\\bestiary-2.json"; "Data\\bestiary-3.json" |]
 
-Loader.upload bestiaries
+Loader.upload conn bestiaries
 
-Database.getCreature "Petitioner"
+Database.getCreature conn "Petitioner"
 
-Database.getCreatures()
+Database.getCreatures conn
+
+conn.Dispose()
